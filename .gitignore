@@ -21,3 +21,4 @@ main.zip
 ops/__pycache__
 
 .idea
+.DS_Store
