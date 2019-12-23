@@ -3,7 +3,7 @@ env = {
         'name': 'if-api-test',
         'role': 'arn:aws:iam::093604411390:role/if_lambda_dev',
         'vpc': {
-            'SubnetIds': ['subnet-0b76b1f8b9b3b733c', 'subnet-0bbc1cc681ff5bfcb'],
+            'SubnetIds': ['subnet-0b710b8ea8b4532a3', 'subnet-0edeeb94ddf3da49f'],
             'SecurityGroupIds': ['sg-0d86c9d8f56c01491', 'sg-0ecc89d05b25dca70'],
         },
         'env-vars': {
