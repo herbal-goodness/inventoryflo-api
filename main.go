@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/herbal-goodness/inventoryflo-api/pkg/util/db"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/router"
@@ -13,6 +15,7 @@ import (
 
 func main() {
 	lambda.Start(handler)
+	defer db.CloseDb()
 }
 
 func handler(_ context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -28,9 +31,9 @@ func handler(_ context.Context, evt events.APIGatewayProxyRequest) (events.APIGa
 	}
 
 	path := strings.Split(evt.Path, "/")[1:]
+
 	var body map[string]interface{}
-	err := json.Unmarshal([]byte(evt.Body), &body)
-	if err != nil {
+	if err := json.Unmarshal([]byte(evt.Body), &body); err != nil {
 		errMsg := fmt.Sprintf("Unable to unmarshal request body to json: %v", err)
 		return respond(500, errMsg, nil)
 	}
