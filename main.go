@@ -38,9 +38,9 @@ func handler(_ context.Context, evt events.APIGatewayProxyRequest) (events.APIGa
 		return respond(500, errMsg, nil)
 	}
 
-	resp, err := router.Route(method, path, body)
-	if err != nil {
-		return respond(500, err.Error(), nil)
+	resp, httpErr := router.Route(method, path, body)
+	if httpErr != nil {
+		return respond(httpErr.Status, httpErr.Error, nil)
 	}
 
 	response, err := json.Marshal(resp)
