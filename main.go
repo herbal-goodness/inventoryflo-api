@@ -2,20 +2,54 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/herbal-goodness/inventoryflo-api/pkg/router"
 )
 
 func main() {
 	lambda.Start(handler)
 }
 
-func handler(_ context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	return response(200, req.Body, nil), nil
+func handler(_ context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	method := evt.HTTPMethod
+	if method == "OPTIONS" {
+		allowed := "OPTIONS, GET, POST, PUT, DELETE"
+		optionsHeaders := map[string]string{
+			"Allow":                        allowed,
+			"Access-Control-Allow-Methods": allowed,
+			"Content-Length":               "0",
+		}
+		return respond(200, "", optionsHeaders)
+	}
+
+	path := strings.Split(evt.Path, "/")[1:]
+	var body map[string]interface{}
+	err := json.Unmarshal([]byte(evt.Body), &body)
+	if err != nil {
+		errMsg := fmt.Sprintf("Unable to unmarshal request body to json: %v", err)
+		return respond(500, errMsg, nil)
+	}
+
+	resp, err := router.Route(method, path, body)
+	if err != nil {
+		return respond(500, err.Error(), nil)
+	}
+
+	response, err := json.Marshal(resp)
+	if err != nil {
+		errMsg := fmt.Sprintf("Unable to marshal response body to string: %v", err)
+		return respond(500, errMsg, nil)
+	}
+
+	return respond(200, string(response), nil)
 }
 
-func response(status int, body string, headers map[string]string) events.APIGatewayProxyResponse {
+func respond(status int, body string, headers map[string]string) (events.APIGatewayProxyResponse, error) {
 	defaultHeaders := map[string]string{
 		"Content-Type":                "application/json",
 		"Access-Control-Allow-Origin": "*",
@@ -28,5 +62,5 @@ func response(status int, body string, headers map[string]string) events.APIGate
 		StatusCode:      status,
 		Headers:         defaultHeaders,
 		IsBase64Encoded: false,
-	}
+	}, nil
 }
