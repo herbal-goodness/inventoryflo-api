@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/herbal-goodness/inventoryflo-api/pkg/util/config"
@@ -17,14 +16,31 @@ func CloseDb() {
 	db.Close()
 }
 
-func query(q string) (*sql.Rows, error) {
-	var err error
+func Query(q string) (*sqlx.Rows, error) {
 	if db == nil {
-		if err = newDb(); err != nil {
+		if err := newDb(); err != nil {
 			return nil, err
 		}
 	}
-	return db.Query(q)
+	return db.Queryx(q)
+}
+
+func Select(dest interface{}, q string, args ...interface{}) error {
+	if db == nil {
+		if err := newDb(); err != nil {
+			return err
+		}
+	}
+	return db.Select(dest, q, args)
+}
+
+func Get(dest interface{}, q string, args ...interface{}) error {
+	if db == nil {
+		if err := newDb(); err != nil {
+			return err
+		}
+	}
+	return db.Get(dest, q, args)
 }
 
 func newDb() error {

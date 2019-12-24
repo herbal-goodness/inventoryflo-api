@@ -1,10 +1,16 @@
 package config
 
 import (
+	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
 	"os"
 )
 
 var env = os.Getenv("env")
+
+var ResourceToTableMapping = map[string]model.TableDetails{
+	"items":    {Table: "itemstemp", Id: "sku"},
+	"contacts": {Table: "contacts", Id: "id"},
+}
 
 var constants = map[string]string{
 	"dbUser": "root",
