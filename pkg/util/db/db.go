@@ -16,31 +16,41 @@ func CloseDb() {
 	db.Close()
 }
 
-func Query(q string) (*sqlx.Rows, error) {
+func Query(q string, args ...interface{}) ([]map[string]interface{}, error) {
 	if db == nil {
 		if err := newDb(); err != nil {
 			return nil, err
 		}
 	}
-	return db.Queryx(q)
+	rows, err := db.Queryx(q, args...)
+	if err != nil {
+		return nil, err
+	}
+	return rowsToMap(rows)
 }
 
-func Select(dest interface{}, q string, args ...interface{}) error {
-	if db == nil {
-		if err := newDb(); err != nil {
-			return err
+func rowsToMap(rows *sqlx.Rows) ([]map[string]interface{}, error) {
+	cols, _ := rows.Columns()
+	var result []map[string]interface{}
+	for rows.Next() {
+		columns := make([]interface{}, len(cols))
+		columnPointers := make([]interface{}, len(cols))
+		for i, _ := range columns {
+			columnPointers[i] = &columns[i]
 		}
-	}
-	return db.Select(dest, q, args)
-}
 
-func Get(dest interface{}, q string, args ...interface{}) error {
-	if db == nil {
-		if err := newDb(); err != nil {
-			return err
+		if err := rows.Scan(columnPointers...); err != nil {
+			return nil, err
 		}
+
+		r := make(map[string]interface{})
+		for i, colName := range cols {
+			val := columnPointers[i].(*interface{})
+			r[colName] = *val
+		}
+		result = append(result, r)
 	}
-	return db.Get(dest, q, args)
+	return result, nil
 }
 
 func newDb() error {
