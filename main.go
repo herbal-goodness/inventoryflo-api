@@ -32,13 +32,7 @@ func handler(_ context.Context, evt events.APIGatewayProxyRequest) (events.APIGa
 
 	path := strings.Split(evt.Path, "/")[1:]
 
-	var body map[string]interface{}
-	if err := json.Unmarshal([]byte(evt.Body), &body); err != nil {
-		errMsg := fmt.Sprintf("Unable to unmarshal request body to json: %v", err)
-		return respond(500, errMsg, nil)
-	}
-
-	resp, httpErr := router.Route(method, path, body)
+	resp, httpErr := router.Route(method, path, evt.Body)
 	if httpErr != nil {
 		return respond(httpErr.Status, httpErr.Error, nil)
 	}

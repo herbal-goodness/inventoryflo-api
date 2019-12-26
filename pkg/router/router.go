@@ -1,21 +1,30 @@
 package router
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/data"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
 )
 
 // Route acts like a mux and based on the request routes to the correct function and returns it's response
-func Route(method string, path []string, body map[string]interface{}) (map[string]interface{}, *model.HttpError) {
+func Route(method string, path []string, bodyString string) (map[string]interface{}, *model.HttpError) {
+	var bodyJson map[string]interface{}
 	switch method {
 	case "GET":
 		return get(path)
 	case "POST":
-		return post(path, body)
+		if err := json.Unmarshal([]byte(bodyString), &bodyJson); err != nil {
+			return nil, errResponse(500, fmt.Sprintf("Unable to unmarshal request body to json: %v", err))
+		}
+		return post(path, bodyJson)
 	case "PUT":
-		return put(path, body)
+		if err := json.Unmarshal([]byte(bodyString), &bodyJson); err != nil {
+			return nil, errResponse(500, fmt.Sprintf("Unable to unmarshal request body to json: %v", err))
+		}
+		return put(path, bodyJson)
 	case "DELETE":
-		return delete(path)
+		return del(path)
 	default:
 		return nil, errResponse(404, "Unsupported method: "+method)
 	}
@@ -46,7 +55,7 @@ func put(path []string, body map[string]interface{}) (map[string]interface{}, *m
 	return nil, nil
 }
 
-func delete(path []string) (map[string]interface{}, *model.HttpError) {
+func del(path []string) (map[string]interface{}, *model.HttpError) {
 	return nil, nil
 }
 
