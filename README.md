@@ -38,7 +38,7 @@ This section describes the knowledge and tools needed to deploy and manage the A
 - GNU Make
 - Python3
 - Boto3
-- AWS Credentials configured locally https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration
+- [AWS Credentials configured locally](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration)
 
 ### Make Targets
 - **clean**: removes the binaries
