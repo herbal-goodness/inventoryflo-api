@@ -27,14 +27,13 @@ def update_alias(version):
     )
 
 
-def get_latest_version():
-    alias = lambda_client.get_alias(
-        Name=const['alias'],
+def get_latest_versions():
+    versions = lambda_client.list_versions_by_function(
         FunctionName=env_vars['name'],
-    )
-    version = alias['FunctionVersion']
-    print('Latest version is ' + version)
-    return version
+    )['Versions']
+    versions = list(filter(lambda x: x['Version'] != '$LATEST', versions))
+    versions.sort(key=lambda x: int(x['Version']), reverse=True)
+    return (versions[0]['Version'], versions[1]['Version'])
 
 
 if __name__ == "__main__":
@@ -42,8 +41,8 @@ if __name__ == "__main__":
     lambda_client = boto3.client('lambda')
     env_vars = env[argv[1]]
 
-    version = get_latest_version()
-    update_alias(str(int(version) - 1))
-    delete_version(version)
+    cur, prev = get_latest_versions()
+    update_alias(prev)
+    delete_version(cur)
 
     print('Done.')
