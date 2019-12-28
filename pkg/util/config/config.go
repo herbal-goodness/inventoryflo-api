@@ -1,14 +1,16 @@
 package config
 
 import (
-	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
 	"os"
+
+	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
 )
 
 var env = os.Getenv("env")
 
+// ResourceToTableMapping maps the known resource ids to postgres table details
 var ResourceToTableMapping = map[string]model.TableDetails{
-	"items":    {Table: "itemstemp", Id: "sku"},
+	"items":    {Table: "itemstemp", Id: "sku", ArrayColumns: map[string]struct{}{"certifications": {}}},
 	"contacts": {Table: "contacts", Id: "id"},
 }
 

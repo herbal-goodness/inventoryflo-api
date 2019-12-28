@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/herbal-goodness/inventoryflo-api/pkg/data"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
 )
@@ -10,6 +11,9 @@ import (
 // Route acts like a mux and based on the request routes to the correct function and returns it's response
 func Route(method string, path []string, bodyString string) (map[string]interface{}, *model.HttpError) {
 	var bodyJson map[string]interface{}
+	if len(path) == 0 || path[0] == "" {
+		return nil, errResponse(400, "Empty path not supported. Must specify resource.")
+	}
 	switch method {
 	case "GET":
 		return get(path)
@@ -26,7 +30,7 @@ func Route(method string, path []string, bodyString string) (map[string]interfac
 	case "DELETE":
 		return del(path)
 	default:
-		return nil, errResponse(404, "Unsupported method: "+method)
+		return nil, errResponse(405, "Unsupported method: "+method)
 	}
 }
 
@@ -48,7 +52,11 @@ func get(path []string) (map[string]interface{}, *model.HttpError) {
 }
 
 func post(path []string, body map[string]interface{}) (map[string]interface{}, *model.HttpError) {
-	return nil, nil
+	result, err := data.AddResource(path[0], body)
+	if err != nil {
+		return nil, errResponse(500, err.Error())
+	}
+	return result, nil
 }
 
 func put(path []string, body map[string]interface{}) (map[string]interface{}, *model.HttpError) {
