@@ -26,13 +26,13 @@ func GetAll(resource string) (map[string]interface{}, error) {
 }
 
 // GetResource gets a record of the specified resource and id
-func GetResource(resource string, resourceId string) (map[string]interface{}, error) {
+func GetResource(resource string, resourceID string) (map[string]interface{}, error) {
 	tableDetails, exists := config.ResourceToTableMapping[resource]
 	if !exists {
 		return nil, nil
 	}
 
-	rows, err := db.Query(fmt.Sprintf("SELECT * FROM %s WHERE %s=$1", tableDetails.Table, tableDetails.Id), resourceId)
+	rows, err := db.Query(fmt.Sprintf("SELECT * FROM %s WHERE %s=$1", tableDetails.Table, tableDetails.Id), resourceID)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func GetResource(resource string, resourceId string) (map[string]interface{}, er
 		return nil, nil
 	}
 	if len(rows) != 1 {
-		return nil, fmt.Errorf("multiple records were found with id: %s", resourceId)
+		return nil, fmt.Errorf("multiple records were found with id: %s", resourceID)
 	}
 
 	return transformRows(rows, tableDetails.ArrayColumns)[0], nil
@@ -68,7 +68,7 @@ func AddResource(resource string, record map[string]interface{}) (map[string]int
 }
 
 // UpdateResource updates the record identified by the specified id with the record passed in
-func UpdateResource(resource string, resourceId string, record map[string]interface{}) (map[string]interface{}, error) {
+func UpdateResource(resource string, resourceID string, record map[string]interface{}) (map[string]interface{}, error) {
 	tableDetails, exists := config.ResourceToTableMapping[resource]
 	if !exists {
 		return nil, nil
@@ -76,7 +76,7 @@ func UpdateResource(resource string, resourceId string, record map[string]interf
 	if _, ok := record[tableDetails.Id]; ok {
 		delete(record, tableDetails.Id)
 	}
-	return update(resourceId, record, tableDetails)
+	return update(resourceID, record, tableDetails)
 }
 
 // UpdateResources updates the passed in array of records

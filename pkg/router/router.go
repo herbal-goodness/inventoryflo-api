@@ -10,7 +10,7 @@ import (
 
 // Route acts like a mux and based on the request routes to the correct function and returns it's response
 func Route(method string, path []string, bodyString string) (map[string]interface{}, *model.HttpError) {
-	var bodyJson map[string]interface{}
+	var bodyJSON map[string]interface{}
 	if len(path) == 0 || path[0] == "" {
 		return nil, errResponse(400, "Empty path not supported. Must specify resource.")
 	}
@@ -18,15 +18,15 @@ func Route(method string, path []string, bodyString string) (map[string]interfac
 	case "GET":
 		return get(path)
 	case "POST":
-		if err := json.Unmarshal([]byte(bodyString), &bodyJson); err != nil {
+		if err := json.Unmarshal([]byte(bodyString), &bodyJSON); err != nil {
 			return nil, errResponse(500, fmt.Sprintf("Unable to unmarshal request body to json: %v", err))
 		}
-		return post(path, bodyJson)
+		return post(path, bodyJSON)
 	case "PUT":
-		if err := json.Unmarshal([]byte(bodyString), &bodyJson); err != nil {
+		if err := json.Unmarshal([]byte(bodyString), &bodyJSON); err != nil {
 			return nil, errResponse(500, fmt.Sprintf("Unable to unmarshal request body to json: %v", err))
 		}
-		return put(path, bodyJson)
+		return put(path, bodyJSON)
 	case "DELETE":
 		return del(path)
 	default:
