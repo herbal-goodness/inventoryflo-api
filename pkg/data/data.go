@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/util/config"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/util/db"
 	"github.com/lib/pq"
@@ -54,10 +55,10 @@ func AddResource(resource string, record map[string]interface{}) (map[string]int
 
 	i, p, v := deconstruct(record, tableDetails.ArrayColumns)
 	if v == nil {
-		return nil, fmt.Errorf("invalid identifier: %s", i)
+		return nil, fmt.Errorf("invalid identifier: %s", i[0])
 	}
-
-	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s", tableDetails.Table, i, p, tableDetails.Id)
+	idn := strings.Join(i, ", ")
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING %s", tableDetails.Table, idn, p, tableDetails.Id)
 	rows, err := db.Query(query, v...)
 	if err != nil {
 		return nil, err
@@ -66,7 +67,88 @@ func AddResource(resource string, record map[string]interface{}) (map[string]int
 	return record, nil
 }
 
-func deconstruct(record map[string]interface{}, arrayCols map[string]struct{}) (string, string, []interface{}) {
+// UpdateResource updates the record identified by the specified id with the record passed in
+func UpdateResource(resource string, resourceId string, record map[string]interface{}) (map[string]interface{}, error) {
+	tableDetails, exists := config.ResourceToTableMapping[resource]
+	if !exists {
+		return nil, nil
+	}
+	if _, ok := record[tableDetails.Id]; ok {
+		delete(record, tableDetails.Id)
+	}
+	return update(resourceId, record, tableDetails)
+}
+
+// UpdateResources updates the passed in array of records
+func UpdateResources(resource string, record map[string]interface{}) (map[string]interface{}, error) {
+	tableDetails, exists := config.ResourceToTableMapping[resource]
+	if !exists {
+		return nil, nil
+	}
+	val, ok := record[resource]
+	if !ok {
+		return nil, fmt.Errorf("records to be updated not found")
+	}
+	records := val.([]interface{})
+
+	var successes []map[string]interface{}
+	var failures []string
+	for _, rec := range records {
+		r := rec.(map[string]interface{})
+		id, ok := r[tableDetails.Id]
+		if !ok {
+			failures = append(failures, "ID field not found in record")
+			continue
+		}
+
+		delete(record, tableDetails.Id)
+		updated, err := update(id.(string), r, tableDetails)
+		if err != nil {
+			failures = append(failures, err.Error())
+		} else {
+			successes = append(successes, updated)
+		}
+	}
+
+	response := map[string]interface{}{}
+	var err error = nil
+	if len(failures) == 0 {
+		response[resource] = successes
+	} else {
+		if len(successes) == 0 {
+			err = fmt.Errorf("none of the records passed in were successfully updated")
+			response = nil
+		} else {
+			response[resource] = successes
+			response["errors"] = failures
+			err = fmt.Errorf("partial success")
+		}
+	}
+	return response, err
+}
+
+func update(id string, record map[string]interface{}, td model.TableDetails) (map[string]interface{}, error) {
+	i, _, v := deconstruct(record, td.ArrayColumns)
+	if v == nil {
+		return nil, fmt.Errorf("invalid identifier: %s", i[0])
+	}
+
+	var assignments []string
+	for idx, idn := range i {
+		assignments = append(assignments, fmt.Sprintf("%s = $%d", idn, idx+1))
+	}
+	assignmentString := strings.Join(assignments, ", ")
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s=$%d RETURNING *", td.Table, assignmentString, td.Id, len(i)+1)
+	v = append(v, id)
+	rows, err := db.Query(query, v...)
+
+	if len(rows) == 0 {
+		return nil, fmt.Errorf("resource with id %s not found", id)
+	}
+	return transformRows(rows, td.ArrayColumns)[0], err
+}
+
+func deconstruct(record map[string]interface{}, arrayCols map[string]struct{}) ([]string, string, []interface{}) {
 	var identifiers []string
 	var placeholders []string
 	var values []interface{}
@@ -74,7 +156,7 @@ func deconstruct(record map[string]interface{}, arrayCols map[string]struct{}) (
 
 	for k, v := range record {
 		if !db.IsValidIdentifier(k) {
-			return k, "", nil
+			return []string{k}, "", nil
 		}
 		if v == nil {
 			continue
@@ -88,7 +170,7 @@ func deconstruct(record map[string]interface{}, arrayCols map[string]struct{}) (
 		i++
 	}
 
-	return strings.Join(identifiers, ", "), strings.Join(placeholders, ", "), values
+	return identifiers, strings.Join(placeholders, ", "), values
 }
 
 func transformRows(rows []map[string]interface{}, arrayCols map[string]struct{}) []map[string]interface{} {

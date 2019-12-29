@@ -60,7 +60,27 @@ func post(path []string, body map[string]interface{}) (map[string]interface{}, *
 }
 
 func put(path []string, body map[string]interface{}) (map[string]interface{}, *model.HttpError) {
-	return nil, nil
+	var result map[string]interface{}
+	var err error
+	if len(path) > 1 && path[1] != "" {
+		result, err = data.UpdateResource(path[0], path[1], body)
+		if err != nil {
+			return nil, errResponse(500, err.Error())
+		}
+	} else {
+		result, err = data.UpdateResources(path[0], body)
+		if err != nil {
+			if result != nil {
+				resp, _ := json.Marshal(result)
+				return nil, errResponse(206, string(resp))
+			}
+			return nil, errResponse(500, err.Error())
+		}
+	}
+	if result == nil {
+		return nil, errResponse(404, "Resource not found.")
+	}
+	return result, nil
 }
 
 func del(path []string) (map[string]interface{}, *model.HttpError) {
