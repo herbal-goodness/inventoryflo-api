@@ -127,6 +127,24 @@ func UpdateResources(resource string, record map[string]interface{}) (map[string
 	return response, err
 }
 
+// DeleteResource gets a record of the specified resource and id
+func DeleteResource(resource string, resourceID string) (map[string]interface{}, error) {
+	tableDetails, exists := config.ResourceToTableMapping[resource]
+	if !exists {
+		return nil, nil
+	}
+
+	rows, err := db.Query(fmt.Sprintf("DELETE FROM %s WHERE %s=$1 RETURNING *", tableDetails.Table, tableDetails.Id), resourceID)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 {
+		return nil, nil
+	}
+
+	return transformRows(rows, tableDetails.ArrayColumns)[0], nil
+}
+
 func update(id string, record map[string]interface{}, td model.TableDetails) (map[string]interface{}, error) {
 	i, _, v := deconstruct(record, td.ArrayColumns)
 	if v == nil {

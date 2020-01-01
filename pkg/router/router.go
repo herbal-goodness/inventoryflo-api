@@ -84,7 +84,18 @@ func put(path []string, body map[string]interface{}) (map[string]interface{}, *m
 }
 
 func del(path []string) (map[string]interface{}, *model.HttpError) {
-	return nil, nil
+	if len(path) == 1 || path[1] == "" {
+		return nil, errResponse(400, "Must specify resourceId.")
+	}
+
+	result, err := data.DeleteResource(path[0], path[1])
+	if err != nil {
+		return nil, errResponse(500, err.Error())
+	}
+	if result == nil {
+		return nil, errResponse(204, "Resource not found.")
+	}
+	return result, nil
 }
 
 func errResponse(status int, message string) *model.HttpError {
