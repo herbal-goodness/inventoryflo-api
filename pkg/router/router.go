@@ -3,7 +3,7 @@ package router
 import (
 	"encoding/json"
 	"fmt"
-
+	"github.com/herbal-goodness/inventoryflo-api/pkg/auth"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/data"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
 )
@@ -52,7 +52,13 @@ func get(path []string) (map[string]interface{}, *model.HttpError) {
 }
 
 func post(path []string, body map[string]interface{}) (map[string]interface{}, *model.HttpError) {
-	result, err := data.AddResource(path[0], body)
+	var result map[string]interface{}
+	var err error
+	if path[0] == "auth" {
+		result, err = auth.Perform(body)
+	} else {
+		result, err = data.AddResource(path[0], body)
+	}
 	if err != nil {
 		return nil, errResponse(500, err.Error())
 	}
@@ -62,6 +68,13 @@ func post(path []string, body map[string]interface{}) (map[string]interface{}, *
 func put(path []string, body map[string]interface{}) (map[string]interface{}, *model.HttpError) {
 	var result map[string]interface{}
 	var err error
+	if path[0] == "auth" {
+		result, err = auth.ChangePassword(body)
+		if err != nil {
+			return nil, errResponse(500, err.Error())
+		}
+		return result, nil
+	}
 	if len(path) > 1 && path[1] != "" {
 		result, err = data.UpdateResource(path[0], path[1], body)
 		if err != nil {
