@@ -6,22 +6,23 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"os"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 )
 
-var blockCipher cipher.Block = nil
+var gcm cipher.AEAD = nil
 
-func decrypt(ciphertext string) string {
-	if blockCipher == nil {
-		blockCipher, _ = aes.NewCipher(getDataKey())
+func decrypt(cipherText string) string {
+	if gcm == nil {
+		c, _ := aes.NewCipher(getDataKey())
+		gcm, _ = cipher.NewGCM(c)
 	}
-	cipherblob, _ := hex.DecodeString(ciphertext)
-	data := make([]byte, len(cipherblob))
-	blockCipher.Decrypt(data, cipherblob)
-	return unpad(string(data))
+	cipherBlob, _ := hex.DecodeString(cipherText)
+	ns := gcm.NonceSize()
+	nonce, blob := cipherBlob[:ns], cipherBlob[ns:]
+	plain, _ := gcm.Open(nil, nonce, blob, nil)
+	return string(plain)
 }
 
 func getDataKey() []byte {
@@ -29,8 +30,4 @@ func getDataKey() []byte {
 	blob, _ := base64.StdEncoding.DecodeString(os.Getenv("data_key"))
 	result, _ := svc.Decrypt(&kms.DecryptInput{CiphertextBlob: blob})
 	return result.Plaintext
-}
-
-func unpad(text string) string {
-	return text[:strings.Index(text, "=")]
 }

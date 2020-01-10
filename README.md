@@ -55,7 +55,6 @@ This section describes the knowledge and tools needed to encrypt and manage secr
 - Golang 1.12+
 - AWS Credentials configured locally
 - Have "AWS_DEFAULT_REGION" environment variable set to the region the API will be in. Currently 'us-east-2'
-- Your secret must not have an '=' in it and must be less than 32 characters.
 
 ### Procedure
 ENV will refer to the environment your are encrypting for i.e. qa or prod

@@ -31,10 +31,10 @@ var envVars = map[string]map[string]string{
 
 var secrets = map[string]map[string]string{
 	"qa": {
-		"dbPass": "000b8c2df0a6896fa62c4682a0dbef8b00000000000000000000000000000000",
+		"dbPass": "60270ce536ba98d849b56b57dbe71025e9d74b77998ed97cb02bad1275bda705e28361cf9306e295",
 	},
 	"prod": {
-		"dbPass": "",
+		"dbPass": "dcfefea16f7368ebf1505701e819ab8bd87fa76ac853c48e1644309a1f6bd84502a6fcc963f08f78344e51a4",
 	},
 }
 
