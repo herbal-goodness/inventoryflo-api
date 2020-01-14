@@ -15,10 +15,10 @@ env = {
     },
     'prod': {
         'name': 'if-api-prod',
-        'role': 'todo',
+        'role': 'arn:aws:iam::093604411390:role/if_prod_api_role',
         'vpc': {
-            'SubnetIds': ['todo'],
-            'SecurityGroupIds': ['todo'],
+            'SubnetIds': ['subnet-09a39f4bb864f495b', 'subnet-038b21020fee96e86', 'subnet-008622781673654ed'],
+            'SecurityGroupIds': ['sg-06f57925d5e75a1e1'],
         },
         'env-vars': {
             'Variables': {
