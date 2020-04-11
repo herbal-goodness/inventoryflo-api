@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// In Progress
+
 var actionToMethodMapping = map[string]func(map[string]interface{}) (map[string]interface{}, error){
 	"register":   register,
 	"deregister": deregister,

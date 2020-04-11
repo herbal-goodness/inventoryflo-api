@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/herbal-goodness/inventoryflo-api/pkg/util/db"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/router"
@@ -15,7 +13,7 @@ import (
 
 func main() {
 	lambda.Start(handler)
-	defer db.CloseDb()
+	//defer db.CloseDb()
 }
 
 func handler(_ context.Context, evt events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
