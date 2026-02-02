@@ -3,6 +3,10 @@
     "klaviyo": {
       "transport": "http",
       "url": "https://mcp.klaviyo.com/mcp"
+    },
+    "notion": {
+      "transport": "http",
+      "url": "https://mcp.notion.com/mcp"
     }
   }
 }
