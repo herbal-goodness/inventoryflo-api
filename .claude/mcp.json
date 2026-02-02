@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "klaviyo": {
+      "transport": "http",
+      "url": "https://mcp.klaviyo.com/mcp"
+    }
+  }
+}
