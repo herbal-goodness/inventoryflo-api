@@ -1,11 +1,12 @@
 package router
 
 import (
-	//"encoding/json"
-	//"fmt"
+	"encoding/json"
+	"fmt"
 	//"github.com/herbal-goodness/inventoryflo-api/pkg/auth"
 	//"github.com/herbal-goodness/inventoryflo-api/pkg/data"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
+	"github.com/herbal-goodness/inventoryflo-api/pkg/service/bamboohr"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/service/shopify"
 )
 
@@ -18,11 +19,11 @@ func Route(method string, path []string, bodyString string) (map[string]interfac
 	switch method {
 	case "GET":
 		return get(path)
-	//case "POST":
-	//	if err := json.Unmarshal([]byte(bodyString), &bodyJSON); err != nil {
-	//		return nil, errResponse(500, fmt.Sprintf("Unable to unmarshal request body to json: %v", err))
-	//	}
-	//	return post(path, bodyJSON)
+	case "POST":
+		if path[0] == "hr" {
+			return postHR(bodyString)
+		}
+		return nil, errResponse(405, "POST not supported for this resource")
 	//case "PUT":
 	//	if err := json.Unmarshal([]byte(bodyString), &bodyJSON); err != nil {
 	//		return nil, errResponse(500, fmt.Sprintf("Unable to unmarshal request body to json: %v", err))
@@ -38,16 +39,57 @@ func Route(method string, path []string, bodyString string) (map[string]interfac
 func get(path []string) (map[string]interface{}, *model.HttpError) {
 	var result map[string]interface{}
 	var err error
-	if len(path) == 1 || path[1] == "" {
-		result, err = shopify.GetResources(path[0])
-	} //else {
-	//	result, err = data.GetResource(path[0], path[1])
-	//}
+
+	switch path[0] {
+	case "employees":
+		dir, dirErr := bamboohr.GetEmployeeDirectory()
+		if dirErr != nil {
+			return nil, errResponse(500, dirErr.Error())
+		}
+		result = map[string]interface{}{"employees": dir.Employees}
+	case "employee":
+		if len(path) < 2 || path[1] == "" {
+			return nil, errResponse(400, "Must specify employee ID: /employee/{id}")
+		}
+		emp, empErr := bamboohr.GetEmployee(path[1])
+		if empErr != nil {
+			return nil, errResponse(500, empErr.Error())
+		}
+		result = map[string]interface{}{"employee": emp}
+	case "job-openings":
+		openings, jErr := bamboohr.GetJobOpenings()
+		if jErr != nil {
+			return nil, errResponse(500, jErr.Error())
+		}
+		result = map[string]interface{}{"job_openings": openings}
+	default:
+		if len(path) == 1 || path[1] == "" {
+			result, err = shopify.GetResources(path[0])
+		}
+	}
+
 	if err != nil {
 		return nil, errResponse(500, err.Error())
 	}
 	if result == nil {
 		return nil, errResponse(404, "Resource not found.")
+	}
+	return result, nil
+}
+
+// postHR handles POST /hr requests — the main HR sub-agent dispatcher
+func postHR(bodyString string) (map[string]interface{}, *model.HttpError) {
+	var req model.HRAgentRequest
+	if err := json.Unmarshal([]byte(bodyString), &req); err != nil {
+		return nil, errResponse(400, fmt.Sprintf("Invalid HR agent request body: %v", err))
+	}
+
+	resp := bamboohr.HandleHRAction(req)
+	result := map[string]interface{}{
+		"action":  resp.Action,
+		"status":  resp.Status,
+		"data":    resp.Data,
+		"message": resp.Message,
 	}
 	return result, nil
 }

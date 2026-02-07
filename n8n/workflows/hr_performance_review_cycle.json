@@ -1,0 +1,123 @@
+{
+  "name": "HR Sub-Agent — Performance Review Cycle",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 1 1,4,7,10 *" }]
+        }
+      },
+      "id": "quarterly-trigger",
+      "name": "Quarterly Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "Runs at 9 AM on the 1st of Jan, Apr, Jul, Oct — start of each quarterly review cycle."
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/employees/directory",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "get-all-employees",
+      "name": "BambooHR: Get All Employees",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [500, 300],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "employees"
+      },
+      "id": "split-employees",
+      "name": "Split Employees",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/performance/employees/{{ $json.id }}/goals",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "get-goals",
+      "name": "BambooHR: Get Goals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [900, 300],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an HR performance analyst. Given an employee's goals data, generate a brief quarterly performance summary. Include: 1) Overall progress percentage, 2) Goals on track vs behind, 3) Recommended focus areas for next quarter. Keep it to 3-4 sentences. Be constructive and professional."
+            },
+            {
+              "role": "user",
+              "content": "=Employee: {{ $node['Split Employees'].json.displayName }}\nDepartment: {{ $node['Split Employees'].json.department }}\nGoals: {{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "options": { "temperature": 0.3 }
+      },
+      "id": "ai-review-generator",
+      "name": "AI: Generate Review Summary",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "hr@herbalgoodness.com",
+        "toEmail": "={{ $node['Split Employees'].json.workEmail }}",
+        "subject": "Your Quarterly Performance Summary",
+        "text": "=Hi {{ $node['Split Employees'].json.displayName }},\n\nHere is your quarterly performance summary:\n\n{{ $json.choices[0].message.content }}\n\nPlease review your goals in BambooHR and schedule a check-in with your manager to discuss.\n\nhttps://herbalgoodness.bamboohr.com\n\nBest,\nHR Team"
+      },
+      "id": "email-review",
+      "name": "Email: Send Review",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1300, 200]
+    },
+    {
+      "parameters": {
+        "channel": "#hr-performance",
+        "text": "=:chart_with_upwards_trend: *Quarterly Review Generated*\nEmployee: {{ $node['Split Employees'].json.displayName }}\nDepartment: {{ $node['Split Employees'].json.department }}\nSummary: {{ $json.choices[0].message.content }}"
+      },
+      "id": "slack-log",
+      "name": "Slack: Log Review",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1300, 400],
+      "credentials": { "slackApi": { "id": "slack-creds", "name": "Slack HR Bot" } }
+    }
+  ],
+  "connections": {
+    "Quarterly Trigger": { "main": [[{ "node": "BambooHR: Get All Employees", "type": "main", "index": 0 }]] },
+    "BambooHR: Get All Employees": { "main": [[{ "node": "Split Employees", "type": "main", "index": 0 }]] },
+    "Split Employees": { "main": [[{ "node": "BambooHR: Get Goals", "type": "main", "index": 0 }]] },
+    "BambooHR: Get Goals": { "main": [[{ "node": "AI: Generate Review Summary", "type": "main", "index": 0 }]] },
+    "AI: Generate Review Summary": {
+      "main": [[
+        { "node": "Email: Send Review", "type": "main", "index": 0 },
+        { "node": "Slack: Log Review", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

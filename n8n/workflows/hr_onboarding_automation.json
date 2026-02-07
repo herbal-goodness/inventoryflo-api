@@ -1,0 +1,109 @@
+{
+  "name": "HR Sub-Agent — New Hire Onboarding Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hr-agent/onboard",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "onboard-trigger",
+      "name": "Onboarding Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "Triggered when a new hire is confirmed. Expects: firstName, lastName, email, jobTitle, department, hireDate, managerId"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/employees/",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "body": {
+          "json": {
+            "firstName": "={{ $json.body.firstName }}",
+            "lastName": "={{ $json.body.lastName }}",
+            "workEmail": "={{ $json.body.email }}",
+            "jobTitle": "={{ $json.body.jobTitle }}",
+            "department": "={{ $json.body.department }}",
+            "hireDate": "={{ $json.body.hireDate }}"
+          }
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "create-employee",
+      "name": "BambooHR: Create Employee",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [500, 300],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "channel": "={{ $json.body.department | lower | replace(' ', '-') }}",
+        "text": "=:wave: Welcome *{{ $node['Onboarding Webhook'].json.body.firstName }} {{ $node['Onboarding Webhook'].json.body.lastName }}* to the {{ $node['Onboarding Webhook'].json.body.department }} team!\n\nRole: {{ $node['Onboarding Webhook'].json.body.jobTitle }}\nStart Date: {{ $node['Onboarding Webhook'].json.body.hireDate }}\n\nPlease help them feel welcome!"
+      },
+      "id": "slack-welcome",
+      "name": "Slack: Welcome Message",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [750, 200],
+      "credentials": { "slackApi": { "id": "slack-creds", "name": "Slack HR Bot" } }
+    },
+    {
+      "parameters": {
+        "fromEmail": "hr@herbalgoodness.com",
+        "toEmail": "={{ $node['Onboarding Webhook'].json.body.email }}",
+        "subject": "=Welcome to Herbal Goodness, {{ $node['Onboarding Webhook'].json.body.firstName }}!",
+        "text": "=Hi {{ $node['Onboarding Webhook'].json.body.firstName }},\n\nWelcome to Herbal Goodness! We're excited to have you join us as {{ $node['Onboarding Webhook'].json.body.jobTitle }} in {{ $node['Onboarding Webhook'].json.body.department }}.\n\nYour start date is {{ $node['Onboarding Webhook'].json.body.hireDate }}.\n\nHere's what to expect in your first week:\n\n1. Day 1: Orientation & IT setup\n2. Day 2: Meet your team & manager\n3. Day 3: Systems training (BambooHR, Slack, Shopify)\n4. Day 4: Department-specific onboarding\n5. Day 5: First week check-in with your manager\n\nPlease log into BambooHR to complete your onboarding paperwork:\nhttps://herbalgoodness.bamboohr.com\n\nQuestions? Reply to this email or message the #hr channel on Slack.\n\nBest,\nHR Team — Herbal Goodness"
+      },
+      "id": "send-welcome-email",
+      "name": "Email: Welcome",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [750, 400]
+    },
+    {
+      "parameters": {
+        "channel": "#hr-onboarding",
+        "text": "=:clipboard: *Onboarding Checklist Created*\n\nNew Hire: {{ $node['Onboarding Webhook'].json.body.firstName }} {{ $node['Onboarding Webhook'].json.body.lastName }}\nBambooHR ID: {{ $node['BambooHR: Create Employee'].json.headers.location }}\nDepartment: {{ $node['Onboarding Webhook'].json.body.department }}\nManager ID: {{ $node['Onboarding Webhook'].json.body.managerId }}\n\n*IT Tasks:*\n- [ ] Create email account\n- [ ] Provision laptop\n- [ ] Set up Slack account\n- [ ] Grant system access\n\n*HR Tasks:*\n- [ ] I-9 verification\n- [ ] Benefits enrollment\n- [ ] Direct deposit setup\n- [ ] Employee handbook acknowledgment\n\n*Manager Tasks:*\n- [ ] Schedule 1-on-1 intro\n- [ ] Assign onboarding buddy\n- [ ] Set 30/60/90 day goals"
+      },
+      "id": "slack-checklist",
+      "name": "Slack: Onboarding Checklist",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [750, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'success', message: 'Onboarding initiated', employee: $node['Onboarding Webhook'].json.body.firstName + ' ' + $node['Onboarding Webhook'].json.body.lastName } }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 400]
+    }
+  ],
+  "connections": {
+    "Onboarding Webhook": { "main": [[{ "node": "BambooHR: Create Employee", "type": "main", "index": 0 }]] },
+    "BambooHR: Create Employee": {
+      "main": [[
+        { "node": "Slack: Welcome Message", "type": "main", "index": 0 },
+        { "node": "Email: Welcome", "type": "main", "index": 0 },
+        { "node": "Slack: Onboarding Checklist", "type": "main", "index": 0 }
+      ]]
+    },
+    "Slack: Welcome Message": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Email: Welcome": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Slack: Onboarding Checklist": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

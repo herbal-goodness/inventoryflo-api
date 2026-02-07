@@ -1,0 +1,106 @@
+{
+  "name": "HR Sub-Agent — Employee Offboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hr-agent/offboard",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "offboard-trigger",
+      "name": "Offboarding Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "Triggered after HR manager approves separation. Expects: employee_id, last_day, reason, type (voluntary/involuntary)"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/employees/{{ $json.body.employee_id }}/?fields=firstName,lastName,displayName,workEmail,department,jobTitle,supervisorId",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "get-employee",
+      "name": "BambooHR: Get Employee",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [500, 300],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/employees/{{ $node['Offboarding Webhook'].json.body.employee_id }}/",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "body": {
+          "json": {
+            "terminationDate": "={{ $node['Offboarding Webhook'].json.body.last_day }}",
+            "status": "Inactive"
+          }
+        }
+      },
+      "id": "update-status",
+      "name": "BambooHR: Set Inactive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [750, 300],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "channel": "#hr-offboarding",
+        "text": "=:door: *Offboarding Initiated*\n\nEmployee: {{ $node['BambooHR: Get Employee'].json.displayName }}\nDepartment: {{ $node['BambooHR: Get Employee'].json.department }}\nLast Day: {{ $node['Offboarding Webhook'].json.body.last_day }}\nType: {{ $node['Offboarding Webhook'].json.body.type }}\n\n*IT Tasks:*\n- [ ] Disable email account (schedule for last day + 1)\n- [ ] Revoke system access\n- [ ] Collect company devices\n- [ ] Remove from Slack channels\n\n*HR Tasks:*\n- [ ] Process final paycheck\n- [ ] COBRA notification\n- [ ] Benefits termination\n- [ ] Exit interview scheduled\n- [ ] Knowledge transfer documented\n\n*Manager Tasks:*\n- [ ] Reassign open tasks\n- [ ] Update team documentation\n- [ ] Notify team"
+      },
+      "id": "slack-offboard-checklist",
+      "name": "Slack: Offboarding Checklist",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1000, 200],
+      "credentials": { "slackApi": { "id": "slack-creds", "name": "Slack HR Bot" } }
+    },
+    {
+      "parameters": {
+        "fromEmail": "hr@herbalgoodness.com",
+        "toEmail": "={{ $node['BambooHR: Get Employee'].json.workEmail }}",
+        "subject": "=Transition Information — {{ $node['BambooHR: Get Employee'].json.displayName }}",
+        "text": "=Hi {{ $node['BambooHR: Get Employee'].json.firstName }},\n\nThis email confirms the details of your transition:\n\nLast Day: {{ $node['Offboarding Webhook'].json.body.last_day }}\n\nBefore your last day, please:\n1. Return any company equipment (laptop, badge, etc.)\n2. Complete knowledge transfer with your team\n3. Update any shared documents or handoff notes\n\nHR will be in touch regarding:\n- Final paycheck details\n- Benefits continuation (COBRA)\n- 401(k) rollover options\n\nWe wish you all the best.\n\nBest regards,\nHR Team — Herbal Goodness"
+      },
+      "id": "email-transition",
+      "name": "Email: Transition Notice",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'success', message: 'Offboarding initiated', employee: $node['BambooHR: Get Employee'].json.displayName, last_day: $node['Offboarding Webhook'].json.body.last_day } }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Offboarding Webhook": { "main": [[{ "node": "BambooHR: Get Employee", "type": "main", "index": 0 }]] },
+    "BambooHR: Get Employee": { "main": [[{ "node": "BambooHR: Set Inactive", "type": "main", "index": 0 }]] },
+    "BambooHR: Set Inactive": {
+      "main": [[
+        { "node": "Slack: Offboarding Checklist", "type": "main", "index": 0 },
+        { "node": "Email: Transition Notice", "type": "main", "index": 0 }
+      ]]
+    },
+    "Slack: Offboarding Checklist": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Email: Transition Notice": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

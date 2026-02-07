@@ -16,7 +16,8 @@ var constants = map[string]string{
 	//"dbUser": "root",
 	//"dbPort": "5432",
 	//"dbName": "inventoryflo",
-	"shopifyUrl": "herbal-papaya.myshopify.com/admin/api/2020-01/",
+	"shopifyUrl":     "herbal-papaya.myshopify.com/admin/api/2020-01/",
+	"bamboohrDomain": "herbalgoodness",
 }
 
 var envVars = map[string]map[string]string{
@@ -31,13 +32,15 @@ var envVars = map[string]map[string]string{
 var secrets = map[string]map[string]string{
 	"qa": {
 		//"dbPass": "60270ce536ba98d849b56b57dbe71025e9d74b77998ed97cb02bad1275bda705e28361cf9306e295",
-		"shopifyKey": "f3e5803fd16361b2a3b0adff0c37181c7655ddc8abb762ec16d84e465a65e556c4c077512e1292501e3e53d69da2bc941c06bf6958e353abf208c3f4",
-		"shopifyPass": "092f54af6ae24adc90e686bde858608e918daf063bd192c68414562301205e26d054cb3733835688a4db837f486572398d18b12580da6f75e0a58b19",
+		"shopifyKey":     "f3e5803fd16361b2a3b0adff0c37181c7655ddc8abb762ec16d84e465a65e556c4c077512e1292501e3e53d69da2bc941c06bf6958e353abf208c3f4",
+		"shopifyPass":    "092f54af6ae24adc90e686bde858608e918daf063bd192c68414562301205e26d054cb3733835688a4db837f486572398d18b12580da6f75e0a58b19",
+		"bamboohrApiKey": "", // TODO: Encrypt and add BambooHR API key here
 	},
 	"prod": {
 		//"dbPass": "dcfefea16f7368ebf1505701e819ab8bd87fa76ac853c48e1644309a1f6bd84502a6fcc963f08f78344e51a4",
-		"shopifyKey": "197833dfd3b1fe0437cd6ae0256c1125f5b9066cbbd02b7a16794a94401dbb04423d2861c3e0143ea0e70a55417bb1eca7392246f4bf60a021b18e70",
-		"shopifyPass": "859fc854b79623940c38631ea4fbc7022d917c5c574b75ddea4584ba29c45852caa57087c44c8414f0599e18d6e657cf48ec8341d6f6c2eb9e5c975b",
+		"shopifyKey":     "197833dfd3b1fe0437cd6ae0256c1125f5b9066cbbd02b7a16794a94401dbb04423d2861c3e0143ea0e70a55417bb1eca7392246f4bf60a021b18e70",
+		"shopifyPass":    "859fc854b79623940c38631ea4fbc7022d917c5c574b75ddea4584ba29c45852caa57087c44c8414f0599e18d6e657cf48ec8341d6f6c2eb9e5c975b",
+		"bamboohrApiKey": "", // TODO: Encrypt and add BambooHR API key here
 	},
 }
 

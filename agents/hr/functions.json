@@ -1,0 +1,210 @@
+{
+  "agent": "hr-subagent",
+  "version": "1.0.0",
+  "description": "Function definitions for the HR Sub-Agent connected to BambooHR",
+  "functions": [
+    {
+      "name": "list_employees",
+      "description": "Retrieve the full employee directory from BambooHR. Returns names, titles, departments, emails, and employment status.",
+      "parameters": {},
+      "returns": {
+        "type": "BambooEmployeeDirectory",
+        "description": "Array of all active employees with basic profile info"
+      },
+      "side_effects": false,
+      "requires_approval": false
+    },
+    {
+      "name": "get_employee",
+      "description": "Look up a single employee by their BambooHR ID. Returns detailed profile information including job title, department, hire date, supervisor, and contact info.",
+      "parameters": {
+        "employee_id": {
+          "type": "string",
+          "required": true,
+          "description": "The BambooHR employee ID"
+        }
+      },
+      "returns": {
+        "type": "BambooEmployee",
+        "description": "Full employee profile"
+      },
+      "side_effects": false,
+      "requires_approval": false
+    },
+    {
+      "name": "add_employee",
+      "description": "Create a new employee record in BambooHR. Used during onboarding to set up a new hire with basic profile information.",
+      "parameters": {
+        "firstName": {
+          "type": "string",
+          "required": true,
+          "description": "Employee first name"
+        },
+        "lastName": {
+          "type": "string",
+          "required": true,
+          "description": "Employee last name"
+        },
+        "workEmail": {
+          "type": "string",
+          "required": true,
+          "description": "Employee work email address"
+        },
+        "jobTitle": {
+          "type": "string",
+          "required": false,
+          "description": "Job title"
+        },
+        "department": {
+          "type": "string",
+          "required": false,
+          "description": "Department name"
+        },
+        "hireDate": {
+          "type": "string",
+          "required": false,
+          "description": "Hire date in YYYY-MM-DD format"
+        },
+        "location": {
+          "type": "string",
+          "required": false,
+          "description": "Work location"
+        }
+      },
+      "returns": {
+        "type": "BambooEmployee",
+        "description": "The created employee record with assigned ID"
+      },
+      "side_effects": true,
+      "requires_approval": true
+    },
+    {
+      "name": "update_employee",
+      "description": "Update specific fields on an existing employee record. Can update title, department, location, phone, and other profile fields.",
+      "parameters": {
+        "employee_id": {
+          "type": "string",
+          "required": true,
+          "description": "The BambooHR employee ID to update"
+        },
+        "fields": {
+          "type": "object",
+          "required": true,
+          "description": "Key-value pairs of field names and new values to set"
+        }
+      },
+      "returns": {
+        "type": "object",
+        "description": "Confirmation of updated employee ID"
+      },
+      "side_effects": true,
+      "requires_approval": true
+    },
+    {
+      "name": "get_time_off",
+      "description": "Retrieve time-off requests within a date range. Includes approved, pending, and denied requests. Useful for capacity planning and absence tracking.",
+      "parameters": {
+        "start": {
+          "type": "string",
+          "required": true,
+          "description": "Start date in YYYY-MM-DD format"
+        },
+        "end": {
+          "type": "string",
+          "required": true,
+          "description": "End date in YYYY-MM-DD format"
+        }
+      },
+      "returns": {
+        "type": "BambooTimeOffRequests",
+        "description": "Array of time-off requests in the specified range"
+      },
+      "side_effects": false,
+      "requires_approval": false
+    },
+    {
+      "name": "list_job_openings",
+      "description": "Retrieve all active job openings from the BambooHR Applicant Tracking System (ATS). Shows job title, department, location, and hiring lead.",
+      "parameters": {},
+      "returns": {
+        "type": "array<BambooJobOpening>",
+        "description": "List of active job openings"
+      },
+      "side_effects": false,
+      "requires_approval": false
+    },
+    {
+      "name": "get_applicants",
+      "description": "Retrieve all applicants for a specific job opening. Shows applicant names, emails, ratings, sources, and current pipeline status.",
+      "parameters": {
+        "job_opening_id": {
+          "type": "string",
+          "required": true,
+          "description": "The BambooHR job opening ID"
+        }
+      },
+      "returns": {
+        "type": "BambooApplicants",
+        "description": "Array of applicants for the specified job"
+      },
+      "side_effects": false,
+      "requires_approval": false
+    },
+    {
+      "name": "change_applicant_status",
+      "description": "Move an applicant to a different stage in the hiring pipeline (e.g., New → Phone Screen → Interview → Offer). Offer stage and beyond requires human approval.",
+      "parameters": {
+        "applicant_id": {
+          "type": "string",
+          "required": true,
+          "description": "The BambooHR applicant ID"
+        },
+        "status_id": {
+          "type": "string",
+          "required": true,
+          "description": "The target status/stage ID to move the applicant to"
+        }
+      },
+      "returns": {
+        "type": "object",
+        "description": "Confirmation of the status change"
+      },
+      "side_effects": true,
+      "requires_approval": true
+    },
+    {
+      "name": "get_goals",
+      "description": "Retrieve performance goals for a specific employee. Shows goal titles, descriptions, completion percentage, milestones, and due dates.",
+      "parameters": {
+        "employee_id": {
+          "type": "string",
+          "required": true,
+          "description": "The BambooHR employee ID"
+        }
+      },
+      "returns": {
+        "type": "BambooGoals",
+        "description": "Array of performance goals for the employee"
+      },
+      "side_effects": false,
+      "requires_approval": false
+    },
+    {
+      "name": "get_training",
+      "description": "Retrieve training records for a specific employee. Shows completed and in-progress training courses, hours, credits, and certifications.",
+      "parameters": {
+        "employee_id": {
+          "type": "string",
+          "required": true,
+          "description": "The BambooHR employee ID"
+        }
+      },
+      "returns": {
+        "type": "BambooTrainingRecords",
+        "description": "Array of training records for the employee"
+      },
+      "side_effects": false,
+      "requires_approval": false
+    }
+  ]
+}

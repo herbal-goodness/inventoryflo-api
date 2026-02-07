@@ -1,0 +1,287 @@
+{
+  "name": "HR Sub-Agent — Main Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hr-agent",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "HR Agent Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "Receives HR requests from Slack, API, or internal systems. Expects JSON body with 'action' and 'parameters' fields."
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an HR operations agent for Herbal Goodness. You are connected to BambooHR. Parse the user's request and determine which HR action to take. Respond with a JSON object containing 'action' (one of: list_employees, get_employee, add_employee, update_employee, get_time_off, list_job_openings, get_applicants, change_applicant_status, get_goals, get_training, escalate) and 'parameters' (object with required params for the action). If the request involves termination, legal issues, salary changes, or harassment, set action to 'escalate'."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.body.message || $json.body.query }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "ai-classifier",
+      "name": "AI Intent Classifier",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "notes": "Uses LLM to classify the HR request intent and extract parameters. Low temperature for consistent classification."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "value": "list_employees", "output": 0 },
+            { "value": "get_employee", "output": 1 },
+            { "value": "add_employee", "output": 2 },
+            { "value": "update_employee", "output": 3 },
+            { "value": "get_time_off", "output": 4 },
+            { "value": "list_job_openings", "output": 5 },
+            { "value": "get_applicants", "output": 6 },
+            { "value": "change_applicant_status", "output": 7 },
+            { "value": "get_goals", "output": 8 },
+            { "value": "get_training", "output": 9 },
+            { "value": "escalate", "output": 10 }
+          ]
+        },
+        "fallbackOutput": 10,
+        "dataPropertyName": "={{ JSON.parse($json.choices[0].message.content).action }}"
+      },
+      "id": "action-router",
+      "name": "Action Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "notes": "Routes to the correct BambooHR API call based on classified action."
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/employees/directory",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "bamboo-list-employees",
+      "name": "BambooHR: List Employees",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 50],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/employees/{{ JSON.parse($node['AI Intent Classifier'].json.choices[0].message.content).parameters.employee_id }}/?fields=firstName,lastName,displayName,workEmail,jobTitle,department,hireDate,status,supervisor",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "bamboo-get-employee",
+      "name": "BambooHR: Get Employee",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 150],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/employees/",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "body": {
+          "json": "={{ JSON.parse($node['AI Intent Classifier'].json.choices[0].message.content).parameters }}"
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "bamboo-add-employee",
+      "name": "BambooHR: Add Employee",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 250],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/time_off/requests/?start={{ JSON.parse($node['AI Intent Classifier'].json.choices[0].message.content).parameters.start }}&end={{ JSON.parse($node['AI Intent Classifier'].json.choices[0].message.content).parameters.end }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "bamboo-time-off",
+      "name": "BambooHR: Time Off",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 400],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/applicant_tracking/job_summaries",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "bamboo-job-openings",
+      "name": "BambooHR: Job Openings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 500],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/applicant_tracking/jobs/{{ JSON.parse($node['AI Intent Classifier'].json.choices[0].message.content).parameters.job_opening_id }}/applicants",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "bamboo-get-applicants",
+      "name": "BambooHR: Get Applicants",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 600],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/performance/employees/{{ JSON.parse($node['AI Intent Classifier'].json.choices[0].message.content).parameters.employee_id }}/goals",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "bamboo-goals",
+      "name": "BambooHR: Goals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 750],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bamboohr.com/api/gateway.php/{{ $env.BAMBOOHR_DOMAIN }}/v1/training/record/{{ JSON.parse($node['AI Intent Classifier'].json.choices[0].message.content).parameters.employee_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "bamboo-training",
+      "name": "BambooHR: Training",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 850],
+      "credentials": { "httpBasicAuth": { "id": "bamboohr-creds", "name": "BambooHR API Key" } }
+    },
+    {
+      "parameters": {
+        "channel": "#hr-escalations",
+        "text": "=:rotating_light: *HR Escalation Required*\n\nRequest: {{ $json.body.message || $json.body.query }}\nClassified as: {{ JSON.parse($node['AI Intent Classifier'].json.choices[0].message.content).action }}\nReason: This action requires human HR manager approval.\n\nPlease review and take action.",
+        "otherOptions": {}
+      },
+      "id": "slack-escalation",
+      "name": "Slack: Escalate to HR",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1000, 950],
+      "credentials": { "slackApi": { "id": "slack-creds", "name": "Slack HR Bot" } },
+      "notes": "Sends escalation message to #hr-escalations Slack channel for items requiring human review."
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an HR assistant. Take the BambooHR API response data and the original user request, then compose a clear, professional, human-readable summary. Use tables for lists. Be concise. Never expose sensitive PII like SSN or bank details."
+            },
+            {
+              "role": "user",
+              "content": "=Original request: {{ $node['HR Agent Webhook'].json.body.message || $node['HR Agent Webhook'].json.body.query }}\n\nBambooHR data: {{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "ai-response-formatter",
+      "name": "AI Response Formatter",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [1300, 450],
+      "notes": "Takes raw BambooHR API data and formats it into a human-readable response."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'success', response: $json.choices[0].message.content } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1550, 450]
+    }
+  ],
+  "connections": {
+    "HR Agent Webhook": { "main": [[{ "node": "AI Intent Classifier", "type": "main", "index": 0 }]] },
+    "AI Intent Classifier": { "main": [[{ "node": "Action Router", "type": "main", "index": 0 }]] },
+    "Action Router": {
+      "main": [
+        [{ "node": "BambooHR: List Employees", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: Get Employee", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: Add Employee", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: List Employees", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: Time Off", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: Job Openings", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: Get Applicants", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: List Employees", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: Goals", "type": "main", "index": 0 }],
+        [{ "node": "BambooHR: Training", "type": "main", "index": 0 }],
+        [{ "node": "Slack: Escalate to HR", "type": "main", "index": 0 }]
+      ]
+    },
+    "BambooHR: List Employees": { "main": [[{ "node": "AI Response Formatter", "type": "main", "index": 0 }]] },
+    "BambooHR: Get Employee": { "main": [[{ "node": "AI Response Formatter", "type": "main", "index": 0 }]] },
+    "BambooHR: Add Employee": { "main": [[{ "node": "AI Response Formatter", "type": "main", "index": 0 }]] },
+    "BambooHR: Time Off": { "main": [[{ "node": "AI Response Formatter", "type": "main", "index": 0 }]] },
+    "BambooHR: Job Openings": { "main": [[{ "node": "AI Response Formatter", "type": "main", "index": 0 }]] },
+    "BambooHR: Get Applicants": { "main": [[{ "node": "AI Response Formatter", "type": "main", "index": 0 }]] },
+    "BambooHR: Goals": { "main": [[{ "node": "AI Response Formatter", "type": "main", "index": 0 }]] },
+    "BambooHR: Training": { "main": [[{ "node": "AI Response Formatter", "type": "main", "index": 0 }]] },
+    "Slack: Escalate to HR": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] },
+    "AI Response Formatter": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
