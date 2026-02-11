@@ -6,6 +6,7 @@ import (
 	//"github.com/herbal-goodness/inventoryflo-api/pkg/auth"
 	//"github.com/herbal-goodness/inventoryflo-api/pkg/data"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
+	"github.com/herbal-goodness/inventoryflo-api/pkg/service/asana"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/service/shopify"
 )
 
@@ -38,6 +39,20 @@ func Route(method string, path []string, bodyString string) (map[string]interfac
 func get(path []string) (map[string]interface{}, *model.HttpError) {
 	var result map[string]interface{}
 	var err error
+
+	// Handle Asana tasks endpoint
+	if path[0] == "tasks" {
+		if len(path) < 2 || path[1] == "" {
+			return nil, errResponse(400, "Must specify assignee email for tasks. Usage: /tasks/{email}")
+		}
+		result, err = asana.GetOverdueTasks(path[1])
+		if err != nil {
+			return nil, errResponse(500, err.Error())
+		}
+		return result, nil
+	}
+
+	// Handle Shopify resources
 	if len(path) == 1 || path[1] == "" {
 		result, err = shopify.GetResources(path[0])
 	} //else {
