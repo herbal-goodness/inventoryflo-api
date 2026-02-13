@@ -1,0 +1,226 @@
+{
+  "employees": [
+    {
+      "id": "100",
+      "employeeNumber": "EMP-000",
+      "firstName": "Sarah",
+      "lastName": "Martinez",
+      "displayName": "Sarah Martinez",
+      "workEmail": "sarah.martinez@herbalgoodness.com",
+      "mobilePhone": "+1-555-0001",
+      "workPhone": "+1-555-0000",
+      "department": "Sales",
+      "jobTitle": "Sales Director",
+      "location": "Miami, FL",
+      "division": "Marketing & Sales",
+      "hireDate": "2026-01-15",
+      "status": "Active",
+      "employmentStatus": "Full-time"
+    },
+    {
+      "id": "101",
+      "employeeNumber": "EMP-001",
+      "firstName": "Alice",
+      "lastName": "Johnson",
+      "displayName": "Alice Johnson",
+      "workEmail": "alice.johnson@herbalgoodness.com",
+      "mobilePhone": "+1-555-0101",
+      "workPhone": "+1-555-0100",
+      "department": "Engineering",
+      "jobTitle": "Senior Software Engineer",
+      "location": "New York, NY",
+      "division": "Technology",
+      "hireDate": "2026-02-01",
+      "status": "Active",
+      "employmentStatus": "Full-time"
+    },
+    {
+      "id": "102",
+      "employeeNumber": "EMP-002",
+      "firstName": "Bob",
+      "lastName": "Smith",
+      "displayName": "Bob Smith",
+      "workEmail": "bob.smith@herbalgoodness.com",
+      "mobilePhone": "+1-555-0201",
+      "workPhone": "+1-555-0200",
+      "department": "Marketing",
+      "jobTitle": "Marketing Manager",
+      "location": "Los Angeles, CA",
+      "division": "Marketing & Sales",
+      "hireDate": "2026-02-15",
+      "status": "Active",
+      "employmentStatus": "Full-time"
+    },
+    {
+      "id": "104",
+      "employeeNumber": "EMP-004",
+      "firstName": "David",
+      "lastName": "Wilson",
+      "displayName": "David Wilson",
+      "workEmail": "david.wilson@herbalgoodness.com",
+      "mobilePhone": "+1-555-0401",
+      "workPhone": "+1-555-0400",
+      "department": "Engineering",
+      "jobTitle": "DevOps Engineer",
+      "location": "Austin, TX",
+      "division": "Technology",
+      "hireDate": "2026-02-28",
+      "status": "Active",
+      "employmentStatus": "Full-time"
+    },
+    {
+      "id": "105",
+      "employeeNumber": "EMP-005",
+      "firstName": "Emma",
+      "lastName": "Brown",
+      "displayName": "Emma Brown",
+      "workEmail": "emma.brown@herbalgoodness.com",
+      "mobilePhone": "+1-555-0501",
+      "workPhone": "+1-555-0500",
+      "department": "HR",
+      "jobTitle": "HR Specialist",
+      "location": "Chicago, IL",
+      "division": "Human Resources",
+      "hireDate": "2026-03-10",
+      "status": "Active",
+      "employmentStatus": "Full-time"
+    },
+    {
+      "id": "106",
+      "employeeNumber": "EMP-006",
+      "firstName": "Michael",
+      "lastName": "Chen",
+      "displayName": "Michael Chen",
+      "workEmail": "michael.chen@herbalgoodness.com",
+      "mobilePhone": "+1-555-0601",
+      "workPhone": "+1-555-0600",
+      "department": "Engineering",
+      "jobTitle": "Data Engineer",
+      "location": "San Francisco, CA",
+      "division": "Technology",
+      "hireDate": "2026-03-25",
+      "status": "Active",
+      "employmentStatus": "Full-time"
+    },
+    {
+      "id": "107",
+      "employeeNumber": "EMP-007",
+      "firstName": "Jessica",
+      "lastName": "Lee",
+      "displayName": "Jessica Lee",
+      "workEmail": "jessica.lee@herbalgoodness.com",
+      "mobilePhone": "+1-555-0701",
+      "workPhone": "+1-555-0700",
+      "department": "Product",
+      "jobTitle": "Product Manager",
+      "location": "Seattle, WA",
+      "division": "Product",
+      "hireDate": "2026-04-05",
+      "status": "Active",
+      "employmentStatus": "Full-time"
+    },
+    {
+      "id": "108",
+      "employeeNumber": "EMP-008",
+      "firstName": "Ryan",
+      "lastName": "O'Connor",
+      "displayName": "Ryan O'Connor",
+      "workEmail": "ryan.oconnor@herbalgoodness.com",
+      "mobilePhone": "+1-555-0801",
+      "workPhone": "+1-555-0800",
+      "department": "Finance",
+      "jobTitle": "Financial Analyst",
+      "location": "Boston, MA",
+      "division": "Finance",
+      "hireDate": "2026-05-12",
+      "status": "Active",
+      "employmentStatus": "Full-time"
+    }
+  ],
+  "employeesByMonth": {
+    "01": [
+      {
+        "id": "100",
+        "employeeNumber": "EMP-000",
+        "firstName": "Sarah",
+        "lastName": "Martinez",
+        "hireDate": "2026-01-15",
+        "department": "Sales",
+        "jobTitle": "Sales Director"
+      }
+    ],
+    "02": [
+      {
+        "id": "101",
+        "employeeNumber": "EMP-001",
+        "firstName": "Alice",
+        "lastName": "Johnson",
+        "hireDate": "2026-02-01",
+        "department": "Engineering",
+        "jobTitle": "Senior Software Engineer"
+      },
+      {
+        "id": "102",
+        "employeeNumber": "EMP-002",
+        "firstName": "Bob",
+        "lastName": "Smith",
+        "hireDate": "2026-02-15",
+        "department": "Marketing",
+        "jobTitle": "Marketing Manager"
+      },
+      {
+        "id": "104",
+        "employeeNumber": "EMP-004",
+        "firstName": "David",
+        "lastName": "Wilson",
+        "hireDate": "2026-02-28",
+        "department": "Engineering",
+        "jobTitle": "DevOps Engineer"
+      }
+    ],
+    "03": [
+      {
+        "id": "105",
+        "employeeNumber": "EMP-005",
+        "firstName": "Emma",
+        "lastName": "Brown",
+        "hireDate": "2026-03-10",
+        "department": "HR",
+        "jobTitle": "HR Specialist"
+      },
+      {
+        "id": "106",
+        "employeeNumber": "EMP-006",
+        "firstName": "Michael",
+        "lastName": "Chen",
+        "hireDate": "2026-03-25",
+        "department": "Engineering",
+        "jobTitle": "Data Engineer"
+      }
+    ],
+    "04": [
+      {
+        "id": "107",
+        "employeeNumber": "EMP-007",
+        "firstName": "Jessica",
+        "lastName": "Lee",
+        "hireDate": "2026-04-05",
+        "department": "Product",
+        "jobTitle": "Product Manager"
+      }
+    ],
+    "05": [
+      {
+        "id": "108",
+        "employeeNumber": "EMP-008",
+        "firstName": "Ryan",
+        "lastName": "O'Connor",
+        "hireDate": "2026-05-12",
+        "department": "Finance",
+        "jobTitle": "Financial Analyst"
+      }
+    ]
+  },
+  "count": 8,
+  "year": "2026"
+}

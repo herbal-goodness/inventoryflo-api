@@ -201,3 +201,165 @@ func SimulateGetNewEmployees() map[string]interface{} {
 		"year":      "2026",
 	}
 }
+
+// SimulateGetNewEmployeesForYear simulates the GetNewEmployeesForYear function with mock data for all of 2026
+func SimulateGetNewEmployeesForYear() map[string]interface{} {
+	// Mock employee data across different months in 2026
+	mockEmployees := []model.BambooHREmployee{
+		// January 2026
+		{
+			ID:              "100",
+			EmployeeNumber:  "EMP-000",
+			FirstName:       "Sarah",
+			LastName:        "Martinez",
+			DisplayName:     "Sarah Martinez",
+			Email:           "sarah.martinez@herbalgoodness.com",
+			MobilePhone:     "+1-555-0001",
+			WorkPhone:       "+1-555-0000",
+			Department:      "Sales",
+			JobTitle:        "Sales Director",
+			Location:        "Miami, FL",
+			Division:        "Marketing & Sales",
+			HireDate:        "2026-01-15",
+			Status:          "Active",
+			EmploymentStatus: "Full-time",
+		},
+		// February 2026
+		{
+			ID:              "101",
+			EmployeeNumber:  "EMP-001",
+			FirstName:       "Alice",
+			LastName:        "Johnson",
+			DisplayName:     "Alice Johnson",
+			Email:           "alice.johnson@herbalgoodness.com",
+			MobilePhone:     "+1-555-0101",
+			WorkPhone:       "+1-555-0100",
+			Department:      "Engineering",
+			JobTitle:        "Senior Software Engineer",
+			Location:        "New York, NY",
+			Division:        "Technology",
+			HireDate:        "2026-02-01",
+			Status:          "Active",
+			EmploymentStatus: "Full-time",
+		},
+		{
+			ID:              "102",
+			EmployeeNumber:  "EMP-002",
+			FirstName:       "Bob",
+			LastName:        "Smith",
+			DisplayName:     "Bob Smith",
+			Email:           "bob.smith@herbalgoodness.com",
+			MobilePhone:     "+1-555-0201",
+			WorkPhone:       "+1-555-0200",
+			Department:      "Marketing",
+			JobTitle:        "Marketing Manager",
+			Location:        "Los Angeles, CA",
+			Division:        "Marketing & Sales",
+			HireDate:        "2026-02-15",
+			Status:          "Active",
+			EmploymentStatus: "Full-time",
+		},
+		{
+			ID:              "104",
+			EmployeeNumber:  "EMP-004",
+			FirstName:       "David",
+			LastName:        "Wilson",
+			DisplayName:     "David Wilson",
+			Email:           "david.wilson@herbalgoodness.com",
+			MobilePhone:     "+1-555-0401",
+			WorkPhone:       "+1-555-0400",
+			Department:      "Engineering",
+			JobTitle:        "DevOps Engineer",
+			Location:        "Austin, TX",
+			Division:        "Technology",
+			HireDate:        "2026-02-28",
+			Status:          "Active",
+			EmploymentStatus: "Full-time",
+		},
+		// March 2026
+		{
+			ID:              "105",
+			EmployeeNumber:  "EMP-005",
+			FirstName:       "Emma",
+			LastName:        "Brown",
+			DisplayName:     "Emma Brown",
+			Email:           "emma.brown@herbalgoodness.com",
+			MobilePhone:     "+1-555-0501",
+			WorkPhone:       "+1-555-0500",
+			Department:      "HR",
+			JobTitle:        "HR Specialist",
+			Location:        "Chicago, IL",
+			Division:        "Human Resources",
+			HireDate:        "2026-03-10",
+			Status:          "Active",
+			EmploymentStatus: "Full-time",
+		},
+		{
+			ID:              "106",
+			EmployeeNumber:  "EMP-006",
+			FirstName:       "Michael",
+			LastName:        "Chen",
+			DisplayName:     "Michael Chen",
+			Email:           "michael.chen@herbalgoodness.com",
+			MobilePhone:     "+1-555-0601",
+			WorkPhone:       "+1-555-0600",
+			Department:      "Engineering",
+			JobTitle:        "Data Engineer",
+			Location:        "San Francisco, CA",
+			Division:        "Technology",
+			HireDate:        "2026-03-25",
+			Status:          "Active",
+			EmploymentStatus: "Full-time",
+		},
+		// April 2026
+		{
+			ID:              "107",
+			EmployeeNumber:  "EMP-007",
+			FirstName:       "Jessica",
+			LastName:        "Lee",
+			DisplayName:     "Jessica Lee",
+			Email:           "jessica.lee@herbalgoodness.com",
+			MobilePhone:     "+1-555-0701",
+			WorkPhone:       "+1-555-0700",
+			Department:      "Product",
+			JobTitle:        "Product Manager",
+			Location:        "Seattle, WA",
+			Division:        "Product",
+			HireDate:        "2026-04-05",
+			Status:          "Active",
+			EmploymentStatus: "Full-time",
+		},
+		// May 2026
+		{
+			ID:              "108",
+			EmployeeNumber:  "EMP-008",
+			FirstName:       "Ryan",
+			LastName:        "O'Connor",
+			DisplayName:     "Ryan O'Connor",
+			Email:           "ryan.oconnor@herbalgoodness.com",
+			MobilePhone:     "+1-555-0801",
+			WorkPhone:       "+1-555-0800",
+			Department:      "Finance",
+			JobTitle:        "Financial Analyst",
+			Location:        "Boston, MA",
+			Division:        "Finance",
+			HireDate:        "2026-05-12",
+			Status:          "Active",
+			EmploymentStatus: "Full-time",
+		},
+	}
+
+	// Group by month
+	employeesByMonth := make(map[string][]model.BambooHREmployee)
+	for _, emp := range mockEmployees {
+		month := emp.HireDate[5:7] // Extract month from YYYY-MM-DD
+		employeesByMonth[month] = append(employeesByMonth[month], emp)
+	}
+
+	return map[string]interface{}{
+		"employees":        mockEmployees,
+		"employeesByMonth": employeesByMonth,
+		"count":            len(mockEmployees),
+		"year":             "2026",
+	}
+}

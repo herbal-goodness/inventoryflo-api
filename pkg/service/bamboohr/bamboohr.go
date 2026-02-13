@@ -30,6 +30,36 @@ func GetNewEmployees(month, year string) (map[string]interface{}, error) {
 	}, nil
 }
 
+// GetNewEmployeesForYear fetches all employees hired in a specific year
+func GetNewEmployeesForYear(year string) (map[string]interface{}, error) {
+	// Fetch all employees once
+	employees, err := getAllEmployees()
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter employees hired in the specified year
+	newEmployees := filterEmployeesByYear(employees, year)
+
+	// Group by month for better organization
+	employeesByMonth := make(map[string][]model.BambooHREmployee)
+	for _, emp := range newEmployees {
+		hireDate, err := time.Parse("2006-01-02", emp.HireDate)
+		if err != nil {
+			continue
+		}
+		month := fmt.Sprintf("%02d", int(hireDate.Month()))
+		employeesByMonth[month] = append(employeesByMonth[month], emp)
+	}
+
+	return map[string]interface{}{
+		"employees":        newEmployees,
+		"employeesByMonth": employeesByMonth,
+		"count":            len(newEmployees),
+		"year":             year,
+	}, nil
+}
+
 // getAllEmployees fetches all employees from BambooHR API
 func getAllEmployees() ([]model.BambooHREmployee, error) {
 	url := getAPIURL() + "employees/directory"
@@ -84,6 +114,30 @@ func filterEmployeesByHireDate(employees []model.BambooHREmployee, month, year s
 
 		// Check if hire date matches the specified month and year
 		if fmt.Sprintf("%d", hireDate.Year()) == year && fmt.Sprintf("%02d", int(hireDate.Month())) == month {
+			filtered = append(filtered, emp)
+		}
+	}
+
+	return filtered
+}
+
+// filterEmployeesByYear filters employees hired in a specific year
+func filterEmployeesByYear(employees []model.BambooHREmployee, year string) []model.BambooHREmployee {
+	var filtered []model.BambooHREmployee
+
+	for _, emp := range employees {
+		if emp.HireDate == "" {
+			continue
+		}
+
+		// Parse hire date (expected format: YYYY-MM-DD)
+		hireDate, err := time.Parse("2006-01-02", emp.HireDate)
+		if err != nil {
+			continue
+		}
+
+		// Check if hire date matches the specified year
+		if fmt.Sprintf("%d", hireDate.Year()) == year {
 			filtered = append(filtered, emp)
 		}
 	}

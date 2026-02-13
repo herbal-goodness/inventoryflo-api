@@ -47,8 +47,12 @@ func get(path []string) (map[string]interface{}, *model.HttpError) {
 			month := path[2]
 			year := path[3]
 			result, err = bamboohr.GetNewEmployees(month, year)
+		} else if len(path) == 3 && path[1] == "new-employees" {
+			// Path: /bamboohr/new-employees/{year}
+			year := path[2]
+			result, err = bamboohr.GetNewEmployeesForYear(year)
 		} else {
-			return nil, errResponse(400, "Invalid bamboohr path. Use: /bamboohr/new-employees/{month}/{year}")
+			return nil, errResponse(400, "Invalid bamboohr path. Use: /bamboohr/new-employees/{year} or /bamboohr/new-employees/{month}/{year}")
 		}
 	} else if len(path) == 1 || path[1] == "" {
 		result, err = shopify.GetResources(path[0])
