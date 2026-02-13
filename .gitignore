@@ -23,3 +23,9 @@ ops/__pycache__
 
 .idea
 .DS_Store
+
+# Node.js dependencies and environment
+node_modules/
+.env
+.env.local
+package-lock.json

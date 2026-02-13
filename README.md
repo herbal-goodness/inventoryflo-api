@@ -2,11 +2,72 @@
 The backend orchestration layer to the InventoryFlo system.
 
 
+## MCP Servers
+This project includes Model Context Protocol (MCP) servers for enhanced AI-powered integrations.
+
+### BambooHR MCP Server
+The BambooHR MCP server provides HR data access and workforce analytics capabilities.
+
+#### Prerequisites
+- Node.js 16+
+- BambooHR API key (obtain from [BambooHR documentation](https://documentation.bamboohr.com/docs#authentication))
+- Your company's BambooHR subdomain
+
+#### Installation
+
+1. Install Node.js dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Configure environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your BambooHR credentials
+   ```
+
+3. Run the MCP server:
+   ```bash
+   npm run mcp:bamboohr
+   ```
+
+#### Claude Desktop Configuration
+
+To use the BambooHR MCP server with Claude Desktop, add the following to your Claude Desktop MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "bamboohr": {
+      "command": "npx",
+      "args": ["-y", "@zuharz/bamboo-mcp-server"],
+      "env": {
+        "BAMBOO_API_KEY": "your_api_key_here",
+        "BAMBOO_SUBDOMAIN": "your_company_subdomain"
+      }
+    }
+  }
+}
+```
+
+Alternatively, you can reference the included `mcp-config.json` file as a template.
+
+#### Features
+- Enhanced employee search with full name support and email/ID lookup
+- Natural language queries for HR insights
+- Discovery-driven adaptation to your unique BambooHR setup
+- Read-only access with comprehensive audit trail
+- Secure with no data modification capabilities
+
+For more information, visit the [bamboo-mcp-unofficial repository](https://github.com/zuharz/bamboo-mcp-unofficial).
+
+
 ## Development
 This section describes the knowledge and tools needed to start making contributions to this project.
 
 ### Prerequisites
 - Golang 1.12+
+- Node.js 16+ (for MCP servers)
 
 ### Relevant Project Structure
 ```

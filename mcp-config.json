@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "bamboohr": {
+      "command": "npx",
+      "args": ["-y", "@zuharz/bamboo-mcp-server"],
+      "env": {
+        "BAMBOO_API_KEY": "${BAMBOO_API_KEY}",
+        "BAMBOO_SUBDOMAIN": "${BAMBOO_SUBDOMAIN}"
+      },
+      "description": "BambooHR MCP Server - provides HR data access and workforce analytics"
+    }
+  }
+}
