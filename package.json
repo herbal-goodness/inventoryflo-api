@@ -1,0 +1,15 @@
+{
+  "name": "inventoryflo-api-mcp",
+  "version": "1.0.0",
+  "description": "MCP servers for InventoryFlo API - includes BambooHR integration",
+  "private": true,
+  "scripts": {
+    "mcp:bamboohr": "npx @zuharz/bamboo-mcp-server"
+  },
+  "dependencies": {
+    "@zuharz/bamboo-mcp-server": "^1.1.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
