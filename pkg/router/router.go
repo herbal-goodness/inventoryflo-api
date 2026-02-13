@@ -6,6 +6,7 @@ import (
 	//"github.com/herbal-goodness/inventoryflo-api/pkg/auth"
 	//"github.com/herbal-goodness/inventoryflo-api/pkg/data"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/model"
+	"github.com/herbal-goodness/inventoryflo-api/pkg/service/bamboohr"
 	"github.com/herbal-goodness/inventoryflo-api/pkg/service/shopify"
 )
 
@@ -38,11 +39,27 @@ func Route(method string, path []string, bodyString string) (map[string]interfac
 func get(path []string) (map[string]interface{}, *model.HttpError) {
 	var result map[string]interface{}
 	var err error
-	if len(path) == 1 || path[1] == "" {
+
+	// Handle BambooHR requests
+	if path[0] == "bamboohr" {
+		if len(path) >= 4 && path[1] == "new-employees" {
+			// Path: /bamboohr/new-employees/{month}/{year}
+			month := path[2]
+			year := path[3]
+			result, err = bamboohr.GetNewEmployees(month, year)
+		} else if len(path) == 3 && path[1] == "new-employees" {
+			// Path: /bamboohr/new-employees/{year}
+			year := path[2]
+			result, err = bamboohr.GetNewEmployeesForYear(year)
+		} else {
+			return nil, errResponse(400, "Invalid bamboohr path. Use: /bamboohr/new-employees/{year} or /bamboohr/new-employees/{month}/{year}")
+		}
+	} else if len(path) == 1 || path[1] == "" {
 		result, err = shopify.GetResources(path[0])
 	} //else {
 	//	result, err = data.GetResource(path[0], path[1])
 	//}
+
 	if err != nil {
 		return nil, errResponse(500, err.Error())
 	}
